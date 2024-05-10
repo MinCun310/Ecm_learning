@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from .models import Category, Brand, Product, ProductLine, ProductImage
 from .models import Category, Brand, Product, ProductLine
 
 class CategorySerialzier(serializers.ModelSerializer):
@@ -11,6 +12,20 @@ class BrandSerialzier(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = ['name']
+
+class ProductImageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductImage
+        # exclude = ['id', 'product_line']
+        fields = ['name', 'alternative_text', 'order', 'image_url']
+
+class ProductLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name')
+    product_image = ProductImageSerializer(many=True)
+    class Meta:
+        model = ProductLine
+        exclude = ['id', 'product', 'is_active']
 
 class ProductLineSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name')
