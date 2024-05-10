@@ -3,6 +3,8 @@ from django.contrib import admin
 from .models import Category, Product, Brand, ProductLine, ProductImage
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from .models import Category, Product, Brand, ProductLine
+
 # Register your models here.
 
 class ProductLineInLine(admin.TabularInline):
@@ -21,3 +23,6 @@ class ProductLineAdmin(admin.ModelAdmin):
 admin.site.register(Category)
 admin.site.register(Brand)
 admin.site.register(ProductLine, ProductLineAdmin)
+admin.site.register(Category)
+admin.site.register(Brand)
+admin.site.register(ProductLine)

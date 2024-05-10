@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from mptt.models import MPTTModel, TreeForeignKey
 import environ
+from mptt.models import MPTTModel, TreeForeignKey
 from .fields import OrderField
 
 
@@ -98,7 +99,6 @@ class ProductImage(models.Model):
 
     @property
     def image_url(self):
-        print('-------------------------', env('DOMAIN_SITE') + settings.MEDIA_URL + str(self.url))
         return env('DOMAIN_SITE') + settings.MEDIA_URL + str(self.url)
 
     def save(self, *args, **kwargs):
