@@ -22,4 +22,4 @@ class ProductLineAdmin(admin.ModelAdmin):
 
 admin.site.register(Category)
 admin.site.register(Brand)
-admin.site.register(ProductLine)
+admin.site.register(ProductLine, ProductLineAdmin)
