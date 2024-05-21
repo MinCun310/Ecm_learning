@@ -15,8 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+# Get links images
+load_link_images = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('drfecommerce.product.urls')),
-]
+] + load_link_images
