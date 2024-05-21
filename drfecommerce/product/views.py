@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.permissions import AllowAny
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,25 +7,27 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from .models import Category, Brand, Product
-from .serializers import CategorySerialzier, BrandSerialzier, ProductSerializer
+from .serializers import CategorySerializer, BrandSerializer, ProductSerializer, ProductLineSerializer
 
 
 # Create your views here.
+
 class CategoryView(APIView):
-    @extend_schema(responses=CategorySerialzier)
+    @extend_schema(responses=CategorySerializer)
     def get(self, request):
         instance = Category.objects.all()
-        serializer = CategorySerialzier(instance=instance, many=True)
+        serializer = CategorySerializer(instance=instance, many=True)
         return Response({
             'data': serializer.data,
             'message': 'Fetched category successfully'
         })
 
+
 class BrandView(APIView):
-    @extend_schema(responses=BrandSerialzier)
+    @extend_schema(responses=BrandSerializer)
     def get(self, request):
         instance = Brand.objects.all()
-        serializer = BrandSerialzier(instance=instance, many=True)
+        serializer = BrandSerializer(instance=instance, many=True)
         return Response({
             'data': serializer.data,
             'message': 'Fetched brand successfully'
@@ -38,6 +41,7 @@ class BrandView(APIView):
         return Response({
             'message': f'Brand {param_brand_name} deleted successfully'
         })
+
 
 class ProductView(APIView):
     @extend_schema(responses=ProductSerializer)
@@ -80,4 +84,3 @@ class ProductView(APIView):
                 return Response({
                     'message': 'No product found'
                 })
-

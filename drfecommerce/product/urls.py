@@ -10,5 +10,4 @@ urlpatterns = [
     path('product/', ProductView.as_view()),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('schema/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
-
 ]
