@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny
+from django.db.models import Prefetch
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
 
-from .models import Category, Brand, Product
+from .models import Category, Brand, Product, ProductLine
 from .serializers import CategorySerializer, BrandSerializer, ProductSerializer, ProductLineSerializer
 
 
@@ -15,7 +16,7 @@ from .serializers import CategorySerializer, BrandSerializer, ProductSerializer,
 class CategoryView(APIView):
     @extend_schema(responses=CategorySerializer)
     def get(self, request):
-        instance = Category.objects.all()
+        instance = Category.objects_active_manager.all()
         serializer = CategorySerializer(instance=instance, many=True)
         return Response({
             'data': serializer.data,
@@ -46,9 +47,15 @@ class BrandView(APIView):
 class ProductView(APIView):
     @extend_schema(responses=ProductSerializer)
     def get(self, request):
-        product = Product.objects_active_manager.isactive()
+        product = Product.objects_active_manager.all()
+
+        # sắp xếp theo order của ProductLine
+        product = product.prefetch_related(
+            Prefetch('product_line', queryset=ProductLine.objects_active_manager.order_by('order')))
+
         param_category_name = request.query_params.get('category_name')
         param_slug = request.query_params.get('slug')
+        param_product = request.query_params.get('product')
 
         if param_category_name:
             product_filter = product.filter(category__name=param_category_name)
@@ -72,6 +79,18 @@ class ProductView(APIView):
             except Product.DoesNotExist:
                 return Response({
                     'message': f'The product {param_slug} cannot found with slug'
+                })
+        elif param_product:
+            try:
+                product_get_name = product.filter(name=param_product)
+                serializer = ProductSerializer(instance=product_get_name)
+                return Response({
+                    'data': serializer.data,
+                    'message': 'The product name is fetched successfully'
+                })
+            except Product.DoesNotExist:
+                return Response({
+                    'message': f'The product {param_product} cannot found with name'
                 })
         else:
             if product.exists():
