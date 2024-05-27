@@ -8,7 +8,7 @@ from .models import Category, Brand, Product, ProductLine
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name']
+        fields = ['name', 'slug']
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -74,7 +74,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name')
-    brand_name = serializers.CharField(source='brand.name')
+    # brand_name = serializers.CharField(source='brand.name')
     product_line = ProductLineSerializer(many=True)
     product_type_attribute = serializers.SerializerMethodField()
 
@@ -84,7 +84,7 @@ class ProductSerializer(serializers.ModelSerializer):
         exclude = ['category', 'brand']
 
     def get_product_type_attribute(self, obj):
-        attribute = Attribute.objects.filter(product_type_attribute__product__id=obj.id)
+        attribute = Attribute.objects.filter(product_type_attribute__product_type__id=obj.id)
         return AttributeSerializer(attribute, many=True).data
 
     def to_representation(self, instance):

@@ -18,7 +18,8 @@ class ActiveManager(models.Manager):
 
 
 class Category(MPTTModel):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
 
@@ -35,7 +36,7 @@ class Category(MPTTModel):
 
 
 class Brand(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True)
     is_active = models.BooleanField(default=False)
 
     # manage activation of product
@@ -50,12 +51,15 @@ class Brand(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
+    pid = models.CharField(max_length=10, unique=True)
     description = models.TextField(blank=True, null=True)
     is_digital = models.BooleanField(default=False)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True)
     category = TreeForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    product_type = models.ForeignKey('ProductType', on_delete=models.PROTECT, related_name='product')
+    product_type = models.ForeignKey('ProductType', on_delete=models.PROTECT, related_name='product_type')
+    attribute_value = models.ManyToManyField('AttributeValue', through='ProductAttributeValue', related_name='product_attribute_value')
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     # manage activation of product
     objects_active_manager = ActiveManager()
@@ -64,6 +68,23 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProductAttributeValue(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_attribute_value_p')
+    attribute_value = models.ForeignKey('AttributeValue', on_delete=models.CASCADE, related_name='product_attribute_value_av')
+
+    class Meta:
+        unique_together = ('product', 'attribute_value')
+
+    def clean(self):
+        qs = ProductAttributeValue.objects.filter(
+            attribute_value__attribute__name=self.attribute_value.attribute.name,
+            product=self.product
+        )
+        for obj in qs:
+            if self.id != obj.id and self.attribute_value.attribute.name == obj.attribute_value.attribute.name:
+                raise ValidationError(f'Duplicate {self.attribute_value.attribute.name} name.')
 
 
 class Attribute(models.Model):
@@ -121,6 +142,8 @@ class ProductLine(models.Model):
     order = OrderField(unique_for_field='product', blank=True)
     attribute_value = models.ManyToManyField(AttributeValue, through=ProductLineAttributeValue,
                                              related_name='product_line_attribute_value')
+    product_type = models.ForeignKey('ProductType', on_delete=models.PROTECT, related_name='product_line_type')
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     # manage activation of product
     objects_active_manager = ActiveManager()
@@ -189,10 +212,12 @@ class ProductImage(models.Model):
 
 class ProductType(models.Model):
     name = models.CharField(max_length=100)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
     attribute = models.ManyToManyField(Attribute, through='ProductTypeAttribute', related_name='product_type_attribute')
 
     def __str__(self):
-        return self.name
+        attribute_names = ", ".join([attribute.name for attribute in self.attribute.all()])
+        return f'{attribute_names}-{self.name}'
 
 
 class ProductTypeAttribute(models.Model):

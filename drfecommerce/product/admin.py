@@ -13,13 +13,17 @@ from .models import Category, Product, Brand, ProductLine
 
 # Register your models here.
 
+
 class ProductLineInline(admin.TabularInline):
     model = ProductLine
 
 
+class ProductAttributeValueInline(admin.TabularInline):
+    model = AttributeValue.product_attribute_value.through
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    inlines = [ProductLineInline]
+    inlines = [ProductLineInline, ProductAttributeValueInline]
 
 
 class ProductImageInLine(admin.TabularInline):
