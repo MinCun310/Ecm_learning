@@ -229,3 +229,39 @@ class ProductTypeAttribute(models.Model):
 
     def __str__(self):
         return f'{self.product_type}-{self.attribute}'
+
+    def save(self, *args, **kwargs):
+        if self.order is None:
+            product_line = ProductLine.objects_active_manager.filter(product=self.product)
+            max_order = product_line.aggregate(models.Max('order'))['order__max']
+            print('check max order: ', max_order)
+            if max_order is None:
+                max_order = 0
+                self.order = max_order + 1
+            self.order = max_order + 1
+        return super().save(*args, **kwargs)
+
+      
+class ProductImage(models.Model):
+    name = models.CharField(max_length=100)
+    alternative_text = models.CharField(max_length=100)
+    url = models.ImageField(upload_to='product_image', null=True, blank=True)
+    product_line = models.ForeignKey(ProductLine, on_delete=models.CASCADE, related_name='product_image')
+    order = models.PositiveIntegerField(unique=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def image_url(self):
+        return env('DOMAIN_SITE') + settings.MEDIA_URL + str(self.url)
+
+    def save(self, *args, **kwargs):
+        if self.order is None:
+            product_image = ProductImage.objects.filter(product_line=self.product_line)
+            max_order = product_image.aggregate(models.Max('order'))['order__max']
+            if max_order is None:
+                max_order = 0
+                self.order = max_order + 1
+            self.order = max_order + 1
+        return super().save(*args, **kwargs)

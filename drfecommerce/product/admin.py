@@ -6,6 +6,11 @@ from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 
 
+from .models import Category, Product, Brand, ProductLine, ProductImage
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from .models import Category, Product, Brand, ProductLine
+
 # Register your models here.
 
 
@@ -40,6 +45,12 @@ class AttributeInline(admin.TabularInline):
 class ProductTypeAdmin(admin.ModelAdmin):
     inlines = [AttributeInline]
 
+
+class ProductImageInLine(admin.TabularInline):
+    model = ProductImage
+
+class ProductLineAdmin(admin.ModelAdmin):
+    inlines = [ProductImageInLine]
 
 admin.site.register(Category)
 admin.site.register(Brand)
